@@ -1,0 +1,16 @@
+# Node
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+
+# Env
+.env
+.env.*
+
+# Prisma / ORM (if any)
+prisma/migrations/
+
+# Temp
+*.tmp
