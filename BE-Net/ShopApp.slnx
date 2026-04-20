@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/Docker/">
+    <File Path="Dockerfile" />
+    <File Path="docker-compose.yml" />
+    <File Path=".dockerignore" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ShopApp.API/ShopApp.API.csproj" />
+    <Project Path="src/ShopApp.Application/ShopApp.Application.csproj" />
+    <Project Path="src/ShopApp.Domain/ShopApp.Domain.csproj" />
+    <Project Path="src/ShopApp.Infrastructure/ShopApp.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/ShopApp.Tests/ShopApp.Tests.csproj" />
+  </Folder>
+</Solution>

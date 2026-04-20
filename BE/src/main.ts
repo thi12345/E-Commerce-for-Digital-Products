@@ -1,12 +1,22 @@
-import express = require("express");
-
+import "dotenv/config"; 
+import express from "express";
+import productRoutes from "./presentation/http/routes/product.routes"
+import { AppDataSource } from "./infrastructure/db/postgres";
 
 const app = express();
+app.use(express.json());
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true });
-});
+// 👇 your API prefix
+app.use("/api", productRoutes);
 
-app.listen(4000, () => {
-  console.log("Backend running on http://localhost:4000");
-});
+const PORT = 3000;
+
+AppDataSource.initialize()
+  .then(() => {
+    console.log("DB connected");
+
+    app.listen(PORT, () => {
+      console.log(`Server running on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => console.error("DB error:", err));
