@@ -1,6 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using ShopApp.Application.Catalog.Commands.ActivateProduct;
 using ShopApp.Application.Catalog.Commands.CreateProduct;
+using ShopApp.Application.Catalog.Commands.DeactivateProduct;
+using ShopApp.Application.Catalog.Commands.DeleteProduct;
 using ShopApp.Application.Catalog.Commands.UpdateProduct;
 using ShopApp.Application.Catalog.Queries.GetProductById;
 using ShopApp.Application.Catalog.Queries.GetProducts;
@@ -38,6 +41,21 @@ public sealed class ProductsController(ISender sender) : ControllerBase
         var result = await sender.Send(new UpdateProductCommand(
             id, request.Name, request.Description, request.Price, request.Currency, request.DownloadUrl), ct);
         return Ok(result);
+    }
+
+    [HttpPatch("{id:guid}/activate")]
+    public async Task<IActionResult> Activate(Guid id, CancellationToken ct)
+        => Ok(await sender.Send(new ActivateProductCommand(id), ct));
+
+    [HttpPatch("{id:guid}/deactivate")]
+    public async Task<IActionResult> Deactivate(Guid id, CancellationToken ct)
+        => Ok(await sender.Send(new DeactivateProductCommand(id), ct));
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await sender.Send(new DeleteProductCommand(id), ct);
+        return NoContent();
     }
 }
 

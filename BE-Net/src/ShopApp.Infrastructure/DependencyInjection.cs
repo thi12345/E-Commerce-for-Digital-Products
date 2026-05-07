@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using ShopApp.Application.Common.Interfaces;
 using ShopApp.Domain.Catalog.Repositories;
 using ShopApp.Domain.Orders.Repositories;
+using ShopApp.Domain.Users.Repositories;
 using ShopApp.Infrastructure.Persistence;
 using ShopApp.Infrastructure.Persistence.Repositories;
 
@@ -19,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
 
         return services;
     }

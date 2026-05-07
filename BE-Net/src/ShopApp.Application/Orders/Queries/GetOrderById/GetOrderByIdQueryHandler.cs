@@ -16,7 +16,7 @@ public sealed class GetOrderByIdQueryHandler(IOrderRepository orderRepository)
             o.Id, o.CustomerId, o.Status.ToString(),
             o.TotalAmount.Amount, o.TotalAmount.Currency,
             o.Items.Select(i => new OrderItemDto(
-                i.ProductId, i.ProductName, i.UnitPrice.Amount, i.Quantity, i.TotalPrice.Amount
+                i.ProductId, i.ProductName, i.UnitPrice.Amount, i.UnitPrice.Currency, i.Quantity, i.TotalPrice.Amount
             )).ToList().AsReadOnly(),
             o.CreatedAt);
     }
