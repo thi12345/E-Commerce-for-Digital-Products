@@ -15,8 +15,15 @@ const http = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+type ProductListResponse = Product[] | { items?: Product[] };
+
+function normalizeProducts(data: ProductListResponse): Product[] {
+  return Array.isArray(data) ? data : data.items ?? [];
+}
+
 export const productsApi = {
-  getAll: () => http.get<Product[]>("/products").then((r) => r.data),
+  getAll: () =>
+    http.get<ProductListResponse>("/products").then((r) => normalizeProducts(r.data)),
   getById: (id: string) => http.get<Product>(`/products/${id}`).then((r) => r.data),
   create: (payload: CreateProductPayload) =>
     http.post<Product>("/products", payload).then((r) => r.data),

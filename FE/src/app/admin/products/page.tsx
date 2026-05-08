@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Zap, ZapOff, Search } from "lucide-react";
 import { productsApi } from "@/lib/api";
-import { formatPrice } from "@/lib/utils";
+import { effectivePrice, formatPrice, hasDiscount, originalPrice } from "@/lib/utils";
 import { ProductBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -15,7 +15,7 @@ import type { Product, CreateProductPayload } from "@/lib/types";
 export default function AdminProductsPage() {
   const qc = useQueryClient();
   const { data: products, isLoading } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", "admin-list"],
     queryFn: productsApi.getAll,
   });
 
@@ -26,6 +26,7 @@ export default function AdminProductsPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["products"] });
+
 
   const createMutation = useMutation({
     mutationFn: productsApi.create,
@@ -58,6 +59,8 @@ export default function AdminProductsPage() {
   const filtered = (products ?? []).filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.description.toLowerCase().includes(search.toLowerCase()) ||
+      (p.aboutProduct?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
       p.status.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -114,10 +117,19 @@ export default function AdminProductsPage() {
                 <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
                   <td className="px-5 py-3">
                     <p className="font-medium text-gray-900 line-clamp-1">{p.name}</p>
-                    <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{p.description}</p>
+                    <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
+                      {p.aboutProduct ?? p.description}
+                    </p>
                   </td>
-                  <td className="px-5 py-3 hidden sm:table-cell font-medium text-indigo-600">
-                    {formatPrice(p.price, p.currency)}
+                  <td className="px-5 py-3 hidden sm:table-cell">
+                    <span className="font-medium text-indigo-600">
+                      {formatPrice(effectivePrice(p), p.currency)}
+                    </span>
+                    {hasDiscount(p) && (
+                      <span className="ml-1.5 text-xs text-gray-400 line-through">
+                        {formatPrice(originalPrice(p), p.currency)}
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-3">
                     <ProductBadge status={p.status} />

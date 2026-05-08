@@ -6,7 +6,7 @@ import Link from "next/link";
 import { productsApi, usersApi } from "@/lib/api";
 
 export default function AdminDashboard() {
-  const { data: products } = useQuery({ queryKey: ["products"], queryFn: productsApi.getAll });
+  const { data: products } = useQuery({ queryKey: ["products", "admin"], queryFn: productsApi.getAll });
   const { data: users } = useQuery({ queryKey: ["users"], queryFn: usersApi.getAll });
 
   const activeProducts = products?.filter((p) => p.status === "Active").length ?? 0;

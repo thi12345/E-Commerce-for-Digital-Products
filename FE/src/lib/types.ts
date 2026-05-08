@@ -6,6 +6,14 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  actualPrice?: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  aboutProduct?: string;
+  imgLink?: string;
+  productLink?: string;
+  rating?: number;
+  ratingCount?: number;
   currency: string;
   downloadUrl: string;
   status: ProductStatus;
@@ -40,6 +48,12 @@ export interface CreateProductPayload {
   name: string;
   description: string;
   price: number;
+  actualPrice?: number;
+  discountedPrice?: number;
+  discountPercentage?: number;
+  aboutProduct?: string;
+  imgLink?: string;
+  productLink?: string;
   currency: string;
   downloadUrl: string;
 }
@@ -47,6 +61,11 @@ export interface CreateProductPayload {
 export interface UpdateProductPayload extends CreateProductPayload {
   id?: string;
 }
+
+export type ProductSortBy =
+  | "Default"
+  | "PriceAsc"
+  | "PriceDesc";
 
 export interface PlaceOrderPayload {
   customerId: string;

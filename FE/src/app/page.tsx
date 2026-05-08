@@ -27,12 +27,12 @@ const features = [
 ];
 
 export default function HomePage() {
-  const { data: products, isLoading } = useQuery({
-    queryKey: ["products"],
+  const { data, isLoading } = useQuery({
+    queryKey: ["products", "home"],
     queryFn: productsApi.getAll,
   });
 
-  const featured = products?.filter((p) => p.status === "Active").slice(0, 6);
+  const featured = (data ?? []).filter((p) => p.status === "Active").slice(0, 6);
 
   return (
     <div>
