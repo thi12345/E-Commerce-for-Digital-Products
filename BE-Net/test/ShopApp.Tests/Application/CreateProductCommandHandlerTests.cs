@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ShopApp.Application.Catalog.Commands.CreateProduct;
 using ShopApp.Application.Common.Interfaces;
@@ -15,7 +16,10 @@ public sealed class CreateProductCommandHandlerTests
 
     public CreateProductCommandHandlerTests()
     {
-        _handler = new CreateProductCommandHandler(_productRepository.Object, _unitOfWork.Object);
+        _handler = new CreateProductCommandHandler(
+            _productRepository.Object,
+            _unitOfWork.Object,
+            NullLogger<CreateProductCommandHandler>.Instance);
     }
 
     [Fact]
@@ -51,5 +55,20 @@ public sealed class CreateProductCommandHandlerTests
 
         _productRepository.Verify(r => r.AddAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()), Times.Once);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldReturnDraftStatus()
+    {
+        var command = new CreateProductCommand("Ebook C#", "Learn C#", 29.99m, "USD", "https://example.com");
+
+        _productRepository.Setup(r => r.AddAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        result.Status.Should().Be("Draft");
     }
 }

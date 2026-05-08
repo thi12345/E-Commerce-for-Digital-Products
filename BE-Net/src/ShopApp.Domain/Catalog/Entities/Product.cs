@@ -13,10 +13,11 @@ public sealed class Product : AggregateRoot<Guid>
     public Money Price { get; private set; } = null!;
     public string DownloadUrl { get; private set; } = string.Empty;
     public ProductStatus Status { get; private set; }
+    public Guid? CategoryId { get; private set; }
 
     private Product() { }
 
-    public static Product Create(string name, string description, decimal price, string currency, string downloadUrl)
+    public static Product Create(string name, string description, decimal price, string currency, string downloadUrl, Guid? categoryId = null)
     {
         var product = new Product
         {
@@ -25,7 +26,8 @@ public sealed class Product : AggregateRoot<Guid>
             Description = description,
             Price = Money.Create(price, currency),
             DownloadUrl = downloadUrl,
-            Status = ProductStatus.Draft
+            Status = ProductStatus.Draft,
+            CategoryId = categoryId
         };
 
         product.RaiseDomainEvent(new ProductCreatedDomainEvent(
@@ -34,12 +36,13 @@ public sealed class Product : AggregateRoot<Guid>
         return product;
     }
 
-    public void Update(string name, string description, decimal price, string currency, string downloadUrl)
+    public void Update(string name, string description, decimal price, string currency, string downloadUrl, Guid? categoryId = null)
     {
         Name = ProductName.Create(name);
         Description = description;
         Price = Money.Create(price, currency);
         DownloadUrl = downloadUrl;
+        CategoryId = categoryId;
         SetUpdatedAt();
     }
 

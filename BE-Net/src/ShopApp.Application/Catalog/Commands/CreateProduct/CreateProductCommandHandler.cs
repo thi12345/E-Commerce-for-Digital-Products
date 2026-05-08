@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ShopApp.Application.Catalog.DTOs;
 using ShopApp.Application.Common.Interfaces;
 using ShopApp.Domain.Catalog.Entities;
@@ -8,11 +9,15 @@ namespace ShopApp.Application.Catalog.Commands.CreateProduct;
 
 public sealed class CreateProductCommandHandler(
     IProductRepository productRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    ILogger<CreateProductCommandHandler> logger)
     : IRequestHandler<CreateProductCommand, ProductDto>
 {
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken ct)
     {
+        logger.LogInformation("Creating product: Name={Name}, Price={Price} {Currency}",
+            request.Name, request.Price, request.Currency);
+
         var product = Product.Create(
             request.Name,
             request.Description,
@@ -22,6 +27,8 @@ public sealed class CreateProductCommandHandler(
 
         await productRepository.AddAsync(product, ct);
         await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation("Product created: Id={ProductId}, Name={Name}", product.Id, product.Name.Value);
 
         return ToDto(product);
     }

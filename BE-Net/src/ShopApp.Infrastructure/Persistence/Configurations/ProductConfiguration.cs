@@ -27,7 +27,9 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.Description).HasMaxLength(2000);
         builder.Property(p => p.DownloadUrl).HasMaxLength(500);
-        builder.Property(p => p.Status).HasConversion<string>();
+        builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(p => p.CategoryId);
+
         builder.Ignore(p => p.DomainEvents);
     }
 }

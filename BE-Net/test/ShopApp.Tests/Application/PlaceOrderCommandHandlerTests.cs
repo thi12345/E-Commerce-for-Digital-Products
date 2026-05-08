@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using ShopApp.Application.Common.Interfaces;
 using ShopApp.Application.Orders.Commands.PlaceOrder;
@@ -20,7 +21,10 @@ public sealed class PlaceOrderCommandHandlerTests
     public PlaceOrderCommandHandlerTests()
     {
         _handler = new PlaceOrderCommandHandler(
-            _orderRepository.Object, _productRepository.Object, _unitOfWork.Object);
+            _orderRepository.Object,
+            _productRepository.Object,
+            _unitOfWork.Object,
+            NullLogger<PlaceOrderCommandHandler>.Instance);
     }
 
     [Fact]
@@ -61,5 +65,26 @@ public sealed class PlaceOrderCommandHandlerTests
         var act = () => _handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<DomainException>().WithMessage($"*{missingProductId}*");
+    }
+
+    [Fact]
+    public async Task Handle_ShouldSaveOrder_AfterPlacing()
+    {
+        var customerId = Guid.NewGuid();
+        var productId = Guid.NewGuid();
+        var product = Product.Create("Ebook C#", "Learn C#", 29.99m, "USD", "https://example.com");
+
+        _productRepository.Setup(r => r.GetByIdAsync(productId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(product);
+        _orderRepository.Setup(r => r.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
+        var command = new PlaceOrderCommand(customerId, [new PlaceOrderItemDto(productId, 1)]);
+        await _handler.Handle(command, CancellationToken.None);
+
+        _orderRepository.Verify(r => r.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ShopApp.Application.Common.Interfaces;
 using ShopApp.Application.Orders.DTOs;
 using ShopApp.Domain.Catalog.Repositories;
@@ -11,17 +12,24 @@ namespace ShopApp.Application.Orders.Commands.PlaceOrder;
 public sealed class PlaceOrderCommandHandler(
     IOrderRepository orderRepository,
     IProductRepository productRepository,
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    ILogger<PlaceOrderCommandHandler> logger)
     : IRequestHandler<PlaceOrderCommand, OrderDto>
 {
     public async Task<OrderDto> Handle(PlaceOrderCommand request, CancellationToken ct)
     {
+        logger.LogInformation("Placing order: CustomerId={CustomerId}, ItemCount={ItemCount}",
+            request.CustomerId, request.Items.Count);
+
         var order = Order.Create(request.CustomerId);
 
         foreach (var item in request.Items)
         {
             var product = await productRepository.GetByIdAsync(item.ProductId, ct)
                 ?? throw new DomainException($"Product {item.ProductId} not found.");
+
+            logger.LogDebug("Adding item to order: ProductId={ProductId}, Quantity={Quantity}",
+                item.ProductId, item.Quantity);
 
             order.AddItem(product.Id, product.Name.Value, product.Price, item.Quantity);
         }
@@ -30,6 +38,9 @@ public sealed class PlaceOrderCommandHandler(
 
         await orderRepository.AddAsync(order, ct);
         await unitOfWork.SaveChangesAsync(ct);
+
+        logger.LogInformation("Order placed: Id={OrderId}, CustomerId={CustomerId}, Total={Total} {Currency}",
+            order.Id, order.CustomerId, order.TotalAmount.Amount, order.TotalAmount.Currency);
 
         return ToDto(order);
     }
