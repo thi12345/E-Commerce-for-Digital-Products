@@ -1,7 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet *)"
+      "Bash(dotnet *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Thi\\\\Desktop\\\\E-Commerce-for-Digital-Products\\\\BE-Net\\\\src\" -Recurse -Filter \"*Migrations*\" -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(Stop-Process *)",
+      "Bash(curl -s http://localhost:5099/api/products)",
+      "Bash(curl -s http://localhost:5000/api/products)",
+      "Bash(curl -s http://localhost:7000/api/products)",
+      "Bash(curl -s http://localhost:5001/api/products)",
+      "Bash(curl -s http://localhost:5090/api/products)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'Total products: {len\\(d\\)}'\\)\")",
+      "Bash(del \"C:\\\\Users\\\\Thi\\\\Desktop\\\\E-Commerce-for-Digital-Products\\\\BE-Net\\\\src\\\\ShopApp.Infrastructure\\\\Migrations\\\\20260506155204_AddPurchaseCountToProduct.cs\")",
+      "Bash(del \"C:\\\\Users\\\\Thi\\\\Desktop\\\\E-Commerce-for-Digital-Products\\\\BE-Net\\\\src\\\\ShopApp.Infrastructure\\\\Migrations\\\\20260506155204_AddPurchaseCountToProduct.Designer.cs\")",
+      "Bash(Select-Object -ExpandProperty Name)",
+      "Bash(Select-Object Name)",
+      "PowerShell(head *)"
     ]
   }
 }

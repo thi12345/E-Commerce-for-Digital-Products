@@ -132,3 +132,4 @@ C:\Users\Thi\Desktop\E-Commerce-for-Digital-Products\BE-Net\test\ShopApp.Tests\o
 C:\Users\Thi\Desktop\E-Commerce-for-Digital-Products\BE-Net\test\ShopApp.Tests\obj\Debug\net10.0\ShopApp.Tests.pdb
 C:\Users\Thi\Desktop\E-Commerce-for-Digital-Products\BE-Net\test\ShopApp.Tests\obj\Debug\net10.0\ShopApp.Tests.genruntimeconfig.cache
 C:\Users\Thi\Desktop\E-Commerce-for-Digital-Products\BE-Net\test\ShopApp.Tests\obj\Debug\net10.0\ref\ShopApp.Tests.dll
+C:\Users\Thi\Desktop\E-Commerce-for-Digital-Products\BE-Net\test\ShopApp.Tests\bin\Debug\net10.0\BCrypt.Net-Next.dll

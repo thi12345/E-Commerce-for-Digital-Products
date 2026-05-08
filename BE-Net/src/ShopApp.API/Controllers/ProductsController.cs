@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ShopApp.Application.Catalog.Commands.CreateProduct;
+using ShopApp.Application.Catalog.Commands.DeleteProduct;
 using ShopApp.Application.Catalog.Commands.UpdateProduct;
 using ShopApp.Application.Catalog.Queries.GetProductById;
 using ShopApp.Application.Catalog.Queries.GetProducts;
+using ShopApp.Domain.Catalog.Enums;
 
 namespace ShopApp.API.Controllers;
 
@@ -12,9 +14,18 @@ namespace ShopApp.API.Controllers;
 public sealed class ProductsController(ISender sender) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] string? name,
+        [FromQuery] Guid? categoryId,
+        [FromQuery] decimal? minRating,
+        [FromQuery] decimal? minDiscountPercentage,
+        [FromQuery] ProductSortBy sortBy = ProductSortBy.Default,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 30,
+        CancellationToken ct = default)
     {
-        var result = await sender.Send(new GetProductsQuery(), ct);
+        var result = await sender.Send(
+            new GetProductsQuery(name, categoryId, minRating, minDiscountPercentage, sortBy, page, pageSize), ct);
         return Ok(result);
     }
 
@@ -36,10 +47,30 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new UpdateProductCommand(
-            id, request.Name, request.Description, request.Price, request.Currency, request.DownloadUrl), ct);
+            id,
+            request.Name,
+            request.AboutProduct,
+            request.ImgLink,
+            request.Rating,
+            request.RatingCount,
+            request.CategoryId,
+            request.Variants), ct);
         return Ok(result);
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
+    {
+        await sender.Send(new DeleteProductCommand(id), ct);
+        return NoContent();
     }
 }
 
 public record UpdateProductRequest(
-    string Name, string Description, decimal Price, string Currency, string DownloadUrl);
+    string Name,
+    string AboutProduct,
+    string ImgLink,
+    decimal Rating = 0,
+    int RatingCount = 0,
+    Guid? CategoryId = null,
+    IReadOnlyList<ProductVariantRequest>? Variants = null);

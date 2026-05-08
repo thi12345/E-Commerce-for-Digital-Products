@@ -10,8 +10,9 @@ public sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
     {
         builder.HasKey(r => r.Id);
 
-        builder.Property(r => r.Rating).IsRequired();
-        builder.Property(r => r.Comment).HasMaxLength(1000);
+        builder.Property(r => r.Rating).HasColumnType("decimal(3,1)").IsRequired();
+        builder.Property(r => r.ReviewTitle).HasMaxLength(500);
+        builder.Property(r => r.ReviewContent).HasMaxLength(5000);
 
         builder.HasIndex(r => new { r.ProductId, r.UserId }).IsUnique();
     }

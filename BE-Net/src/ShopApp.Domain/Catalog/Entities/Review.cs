@@ -7,12 +7,17 @@ public sealed class Review : BaseEntity<Guid>
 {
     public Guid ProductId { get; private set; }
     public Guid UserId { get; private set; }
-    public int Rating { get; private set; }
-    public string Comment { get; private set; } = string.Empty;
+    public decimal Rating { get; private set; }
+    public string ReviewTitle { get; private set; } = string.Empty;
+    public string ReviewContent { get; private set; } = string.Empty;
+    public string Comment => ReviewContent;
 
     private Review() { }
 
-    public static Review Create(Guid productId, Guid userId, int rating, string comment)
+    public static Review Create(Guid productId, Guid userId, decimal rating, string comment) =>
+        Create(productId, userId, rating, string.Empty, comment);
+
+    public static Review Create(Guid productId, Guid userId, decimal rating, string reviewTitle, string reviewContent)
     {
         if (rating < 1 || rating > 5)
             throw new DomainException("Rating must be between 1 and 5.");
@@ -23,17 +28,22 @@ public sealed class Review : BaseEntity<Guid>
             ProductId = productId,
             UserId = userId,
             Rating = rating,
-            Comment = comment.Trim()
+            ReviewTitle = reviewTitle.Trim(),
+            ReviewContent = reviewContent.Trim()
         };
     }
 
-    public void Update(int rating, string comment)
+    public void Update(decimal rating, string reviewTitle, string reviewContent)
     {
         if (rating < 1 || rating > 5)
             throw new DomainException("Rating must be between 1 and 5.");
 
         Rating = rating;
-        Comment = comment.Trim();
+        ReviewTitle = reviewTitle.Trim();
+        ReviewContent = reviewContent.Trim();
         SetUpdatedAt();
     }
+
+    public void Update(decimal rating, string comment) =>
+        Update(rating, ReviewTitle, comment);
 }

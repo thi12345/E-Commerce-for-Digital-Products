@@ -24,7 +24,6 @@ public sealed class GetProductByIdQueryHandler(
 
         logger.LogDebug("Product found: Id={ProductId}, Name={Name}", p.Id, p.Name.Value);
 
-        return new ProductDto(p.Id, p.Name.Value, p.Description, p.Price.Amount, p.Price.Currency,
-            p.DownloadUrl, p.Status.ToString(), p.CreatedAt);
+        return p.ToDto();
     }
 }

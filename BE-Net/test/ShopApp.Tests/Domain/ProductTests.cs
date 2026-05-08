@@ -14,8 +14,8 @@ public sealed class ProductTests
         var product = Product.Create("Ebook C#", "Learn C#", 29.99m, "USD", "https://example.com/ebook.pdf");
 
         product.Name.Value.Should().Be("Ebook C#");
-        product.Price.Amount.Should().Be(29.99m);
-        product.Price.Currency.Should().Be("USD");
+        product.PrimaryVariant.DiscountedPrice.Amount.Should().Be(29.99m);
+        product.PrimaryVariant.DiscountedPrice.Currency.Should().Be("USD");
         product.Status.Should().Be(ProductStatus.Draft);
     }
 
@@ -81,7 +81,7 @@ public sealed class ProductTests
         product.Update("New Name", "New desc", 20m, "USD", "https://new.com");
 
         product.Name.Value.Should().Be("New Name");
-        product.Price.Amount.Should().Be(20m);
+        product.PrimaryVariant.DiscountedPrice.Amount.Should().Be(20m);
         product.UpdatedAt.Should().NotBeNull();
     }
 }

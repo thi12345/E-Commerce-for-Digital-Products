@@ -31,7 +31,7 @@ public sealed class PlaceOrderCommandHandler(
             logger.LogDebug("Adding item to order: ProductId={ProductId}, Quantity={Quantity}",
                 item.ProductId, item.Quantity);
 
-            order.AddItem(product.Id, product.Name.Value, product.Price, item.Quantity);
+            order.AddItem(product.Id, product.Name.Value, product.PrimaryVariant.DiscountedPrice, item.Quantity);
         }
 
         order.Place();

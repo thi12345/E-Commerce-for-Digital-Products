@@ -1,10 +1,24 @@
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using ShopApp.Application.Common;
 using ShopApp.Infrastructure;
+using ShopApp.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFE",
+        policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -17,6 +31,17 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+app.UseCors("AllowFE");
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    await db.Database.MigrateAsync();
+    await DataSeeder.SeedAsync(db, logger);
 }
 
 app.UseExceptionHandler(errApp =>
@@ -51,5 +76,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
+ 
 public partial class Program { }

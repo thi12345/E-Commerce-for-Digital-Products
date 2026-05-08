@@ -36,8 +36,9 @@ public sealed class CreateProductCommandHandlerTests
 
         result.Should().NotBeNull();
         result.Name.Should().Be("Ebook C#");
-        result.Price.Should().Be(29.99m);
-        result.Currency.Should().Be("USD");
+        result.Variants.Should().ContainSingle();
+        result.Variants![0].DiscountedPrice.Should().Be(29.99m);
+        result.Variants[0].Currency.Should().Be("USD");
         result.Id.Should().NotBeEmpty();
     }
 

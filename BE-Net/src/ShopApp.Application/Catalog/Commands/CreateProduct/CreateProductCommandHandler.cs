@@ -15,25 +15,44 @@ public sealed class CreateProductCommandHandler(
 {
     public async Task<ProductDto> Handle(CreateProductCommand request, CancellationToken ct)
     {
-        logger.LogInformation("Creating product: Name={Name}, Price={Price} {Currency}",
-            request.Name, request.Price, request.Currency);
+        logger.LogInformation("Creating product: Name={Name}, VariantCount={VariantCount}",
+            request.Name, request.Variants?.Count ?? 0);
 
         var product = Product.Create(
             request.Name,
-            request.Description,
-            request.Price,
-            request.Currency,
-            request.DownloadUrl);
+            request.AboutProduct,
+            request.ImgLink,
+            request.Rating,
+            request.RatingCount,
+            request.CategoryId);
+
+        product.ReplaceVariants(request.Variants!.Select(v => CreateVariant(product.Id, v)));
 
         await productRepository.AddAsync(product, ct);
         await unitOfWork.SaveChangesAsync(ct);
 
         logger.LogInformation("Product created: Id={ProductId}, Name={Name}", product.Id, product.Name.Value);
 
-        return ToDto(product);
+        return product.ToDto();
     }
 
-    private static ProductDto ToDto(Product p) => new(
-        p.Id, p.Name.Value, p.Description, p.Price.Amount, p.Price.Currency,
-        p.DownloadUrl, p.Status.ToString(), p.CreatedAt);
+    private static Variant CreateVariant(Guid productId, ProductVariantRequest request)
+    {
+        var variant = Variant.Create(
+            productId,
+            request.Name,
+            request.ActualPrice,
+            request.DiscountedPrice,
+            request.DiscountPercentage,
+            request.Currency,
+            request.ProductLink,
+            request.DownloadUrl,
+            request.Stock,
+            request.IsDefault);
+
+        foreach (var option in request.Options ?? [])
+            variant.AddOption(option.Name, option.Value);
+
+        return variant;
+    }
 }
