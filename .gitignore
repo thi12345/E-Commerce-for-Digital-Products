@@ -37,3 +37,14 @@ dump.rdb
 docker-data/
 docker-volume/
 **/data/
+
+# =========================
+# .NET build artifacts
+# =========================
+**/bin/
+**/obj/
+
+# =========================
+# Claude
+# =========================
+.claude/
