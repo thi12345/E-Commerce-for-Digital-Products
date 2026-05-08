@@ -18,9 +18,6 @@ public sealed class ActivateProductCommandHandler(
         product.Activate();
         productRepository.Update(product);
         await unitOfWork.SaveChangesAsync(ct);
-        return new ProductDto(
-            product.Id, product.Name.Value, product.Description,
-            product.Price.Amount, product.Price.Currency,
-            product.DownloadUrl, product.Status.ToString(), product.CreatedAt);
+        return product.ToDto();
     }
 }

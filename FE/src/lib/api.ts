@@ -15,10 +15,16 @@ const http = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-type ProductListResponse = Product[] | { items?: Product[] };
+type ProductListResponse = Product[] | {
+  data?: Product[];
+  items?: Product[];
+  products?: Product[];
+};
 
 function normalizeProducts(data: ProductListResponse): Product[] {
-  return Array.isArray(data) ? data : data.items ?? [];
+  if (Array.isArray(data)) return data;
+
+  return data.data ?? data.items ?? data.products ?? [];
 }
 
 export const productsApi = {

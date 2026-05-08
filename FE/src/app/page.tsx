@@ -32,7 +32,8 @@ export default function HomePage() {
     queryFn: productsApi.getAll,
   });
 
-  const featured = (data ?? []).filter((p) => p.status === "Active").slice(0, 6);
+  const products = data ?? [];
+  const featured = products.filter((p) => p.status === "Active").slice(0, 6);
 
   return (
     <div>
