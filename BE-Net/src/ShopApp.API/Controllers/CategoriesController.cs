@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopApp.API.Auth;
 using ShopApp.Application.Catalog.Commands.CreateCategory;
 using ShopApp.Application.Catalog.Commands.DeleteCategory;
 using ShopApp.Application.Catalog.Commands.UpdateCategory;
@@ -27,6 +29,7 @@ public sealed class CategoriesController(ISender sender) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Create([FromBody] CreateCategoryCommand command, CancellationToken ct)
     {
         var result = await sender.Send(command, ct);
@@ -34,6 +37,7 @@ public sealed class CategoriesController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCategoryRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new UpdateCategoryCommand(id, request.Name, request.Description), ct);
@@ -41,6 +45,7 @@ public sealed class CategoriesController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await sender.Send(new DeleteCategoryCommand(id), ct);

@@ -6,7 +6,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Trash2, ShoppingBag, Minus, Plus, ArrowLeft } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { ordersApi } from "@/lib/api";
-import { effectivePrice, formatPrice, hasDiscount, originalPrice } from "@/lib/utils";
+import { effectivePrice, formatPrice, hasDiscount, originalPrice, productCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useRouter } from "next/navigation";
@@ -97,11 +97,11 @@ export default function CartPage() {
                 </p>
                 <div className="mt-1 flex items-center gap-2">
                   <p className="text-sm font-bold text-indigo-600">
-                    {formatPrice(effectivePrice(product), product.currency)}
+                    {formatPrice(effectivePrice(product), productCurrency(product))}
                   </p>
                   {hasDiscount(product) && (
                     <p className="text-xs text-gray-400 line-through">
-                      {formatPrice(originalPrice(product), product.currency)}
+                      {formatPrice(originalPrice(product), productCurrency(product))}
                     </p>
                   )}
                 </div>
@@ -131,7 +131,7 @@ export default function CartPage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-400">
-                  = {formatPrice(effectivePrice(product) * quantity, product.currency)}
+                  = {formatPrice(effectivePrice(product) * quantity, productCurrency(product))}
                 </p>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function CartPage() {
                 <div key={product.id} className="flex justify-between text-gray-600">
                   <span className="line-clamp-1 flex-1 mr-2">{product.name} × {quantity}</span>
                   <span className="shrink-0">
-                    {formatPrice(effectivePrice(product) * quantity, product.currency)}
+                    {formatPrice(effectivePrice(product) * quantity, productCurrency(product))}
                   </span>
                 </div>
               ))}

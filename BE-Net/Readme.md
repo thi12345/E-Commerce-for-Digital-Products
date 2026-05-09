@@ -1,146 +1,173 @@
-● Để nắm đủ context, tôi đọc thêm một số file chính.                                                                                                                                                                                
-                                                                                                                                                                                                                                    
-  Read 6 files (ctrl+o to expand)                                                                                                                                                                                                   
-                                                                                                                                                                                                                                    
-● Đủ rồi. Đây là toàn bộ luồng chạy của dự án:   
-                                                                                                                                                                                                                                    
-  ---                                                                                     
-  Kiến trúc tổng quan                                                                                                                                                                                                               
-                                                                                                                                                                                                                                    
-  Dự án theo Clean Architecture, chia làm 4 layer. Dependency chỉ đi từ ngoài vào trong — layer bên trong không biết layer bên ngoài tồn tại:                                                                                       
-                                                                                                                                                                                                                                    
-  HTTP Request                                              
-       │
-       ▼
-  ┌──────────────┐
-  │   ShopApp.API │   ← Tiếp nhận request, trả response
-  └──────┬───────┘
-         │ gửi Command/Query qua MediatR
-         ▼
-  ┌──────────────────────┐
-  │ ShopApp.Application  │   ← Điều phối use case, không có business logic
-  └──────┬───────────────┘
-         │ gọi Domain để xử lý logic
-         ▼
-  ┌──────────────────┐
-  │  ShopApp.Domain  │   ← Business logic thuần, không biết DB hay HTTP
-  └──────────────────┘
-         ▲
-         │ implements interface của Domain
-  ┌──────────────────────────┐
-  │ ShopApp.Infrastructure   │   ← EF Core, PostgreSQL, Repository
-  └──────────────────────────┘
+# ShopApp Backend
 
-  ---
-  Luồng chi tiết — Ví dụ POST /api/products
+Backend API cho he thong e-commerce ban san pham so.
 
-  Bước 1 — HTTP Request vào Controller
+Solution di theo huong Clean Architecture:
 
-  Client gửi POST /api/products
-  Body: { "name": "Ebook C#", "price": 99, "currency": "USD", "downloadUrl": "..." }
+- `ShopApp.API`: HTTP API, Swagger, middleware, cau hinh startup.
+- `ShopApp.Application`: use case, command, query, validation, DTO mapping.
+- `ShopApp.Domain`: entity, value object, domain rule, domain exception.
+- `ShopApp.Infrastructure`: EF Core, PostgreSQL, repository, seed data.
+- `ShopApp.Tests`: automated tests.
 
-  ProductsController nhận request, không xử lý gì cả, chỉ đóng gói thành CreateProductCommand rồi ném vào MediatR:
+## Dieu Kien Can Co
 
-  // ProductsController.cs
-  var result = await sender.Send(command, ct);
+May clone source ve can co:
 
-  ---
-  Bước 2 — MediatR Pipeline (Middleware nội bộ)
+- .NET SDK 10.x.
+- PostgreSQL, hoac Docker neu muon dung `docker-compose.yml`.
+- Ket noi NuGet de restore package.
 
-  MediatR không đưa thẳng vào Handler. Nó chạy qua ValidationBehavior trước — đây là pipeline behavior đăng ký sẵn:
+Project target `net10.0` va co `global.json` pin SDK `10.0.101` voi `rollForward=latestFeature`. Neu may khong co .NET SDK 10 tuong thich thi restore/build/run se fail truoc khi API start.
 
-  MediatR nhận CreateProductCommand
-          │
-          ▼
-  ValidationBehavior.Handle()
-    → Tìm tất cả IValidator<CreateProductCommand>
-    → Chạy CreateProductCommandValidator
-        ✓ Name không rỗng, tối đa 200 ký tự
-        ✓ Price > 0
-        ✓ Currency đúng 3 ký tự
-        ✓ DownloadUrl không rỗng
-    → Nếu lỗi: throw ValidationException → Program.cs bắt → trả 400
-    → Nếu pass: gọi next() → đến Handler
+## Chay Local
 
-  ---
-  Bước 3 — Application Handler xử lý
+1. Clone repository.
 
-  CreateProductCommandHandler chạy:
+2. Dam bao PostgreSQL dang chay.
 
-  // 1. Log bắt đầu
-  logger.LogInformation("Creating product: Name={Name}...", ...);
+3. Kiem tra `.env`:
 
-  // 2. Gọi Domain để tạo entity (business logic nằm ở đây)
-  var product = Product.Create(name, description, price, currency, downloadUrl);
+```env
+ASPNETCORE_ENVIRONMENT=Development
+```
 
-  // 3. Lưu vào repository
-  await productRepository.AddAsync(product, ct);
-  await unitOfWork.SaveChangesAsync(ct);
+4. Doi connection string trong `.env.dev`:
 
-  // 4. Log thành công
-  logger.LogInformation("Product created: Id={ProductId}...", ...);
+```env
+ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=shopApp;Username=postgres;Password=1234
+```
 
-  // 5. Map Entity → DTO rồi trả về
-  return ToDto(product);
+App se doc `.env` truoc, sau do doc `.env.dev` khi `ASPNETCORE_ENVIRONMENT=Development`.
 
-  ---
-  Bước 4 — Domain xử lý business logic
+5. Restore va build:
 
-  Bên trong Product.Create() — tầng này không biết gì về DB hay HTTP:
+```powershell
+dotnet restore ShopApp.slnx
+dotnet build ShopApp.slnx --no-restore
+```
 
-  // Domain/Catalog/Entities/Product.cs
-  var product = new Product {
-      Id = Guid.NewGuid(),
-      Name = ProductName.Create(name),   // Value Object — validate tên
-      Price = Money.Create(price, currency), // Value Object — validate tiền
-      Status = ProductStatus.Draft       // mặc định là Draft
-  };
+6. Chay API:
 
-  // Ghi nhận sự kiện domain đã xảy ra
-  product.RaiseDomainEvent(new ProductCreatedDomainEvent(...));
+```powershell
+dotnet run --project src\ShopApp.API\ShopApp.API.csproj
+```
 
-  ProductName và Money là Value Object — chứa validation và logic riêng của chúng.
+Profile HTTP se tu mo Swagger tai:
 
-  ---
-  Bước 5 — Infrastructure lưu xuống DB
+```text
+http://localhost:5090/swagger
+```
 
-  UnitOfWork.SaveChangesAsync() gọi AppDbContext.SaveChangesAsync() của EF Core. EF Core dùng configuration trong ProductConfiguration để biết cách map:
+Neu terminal hoac IDE khong tu mo browser, mo URL tren bang tay.
 
-  Product entity
-    → Name (Value Object)  → cột "Name" VARCHAR(200)
-    → Price (Value Object) → cột "Price" DECIMAL(18,2) + "Currency" VARCHAR(3)
-    → Status (Enum)        → lưu dạng string ("Draft", "Active", ...)
-    → CategoryId           → FK nullable tới Categories
+## Chay Bang Docker
 
-  ---
-  Bước 6 — Response trả về Client
+Repo co san `docker-compose.yml` de chay PostgreSQL va API cung luc.
 
-  Handler trả ProductDto
-    → Controller nhận: return CreatedAtAction(...)
-    → HTTP 201 Created
-    → Header Location: /api/products/{id}
-    → Body: { "id": "...", "name": "Ebook C#", "price": 99, ... }
+```powershell
+docker compose up --build
+```
 
-  ---
-  Luồng xử lý lỗi
+API trong Docker chay tai:
 
-  Lỗi không cần try/catch ở handler — Program.cs có global exception handler bắt tất cả:
+```text
+http://localhost:8080
+```
 
-  ValidationException  → 400 Bad Request  + danh sách lỗi validation
-  DomainException      → 422 Unprocessable + message lỗi business
-  Exception khác       → 500 Internal Server Error
+Connection string trong Docker tro den service PostgreSQL:
 
-  ---
-  Tóm tắt vai trò từng layer
+```text
+Host=postgres;Port=5432;Database=shopApp;Username=postgres;Password=1234
+```
 
-  ┌────────────────┬─────────────────────────────────────┬────────────────────────────────┐
-  │     Layer      │               Làm gì                │          Không làm gì          │
-  ├────────────────┼─────────────────────────────────────┼────────────────────────────────┤
-  │ API            │ Nhận HTTP, trả HTTP                 │ Không có logic                 │
-  ├────────────────┼─────────────────────────────────────┼────────────────────────────────┤
-  │ Application    │ Điều phối use case, log, map DTO    │ Không có business rule         │
-  ├────────────────┼─────────────────────────────────────┼────────────────────────────────┤
-  │ Domain         │ Business logic, validation, sự kiện │ Không biết DB, không biết HTTP │
-  ├────────────────┼─────────────────────────────────────┼────────────────────────────────┤
-  │ Infrastructure │ Kết nối DB, implement repository    │ Không có business logic        │
-  └────────────────┴─────────────────────────────────────┴────────────────────────────────┘
+## Hanh Vi Database Khi Startup
+
+Moi lan API start, app se tu dong chay:
+
+- EF Core migrations.
+- Seed data ban dau.
+
+Vi vay DB user trong connection string phai co quyen tao va cap nhat schema.
+
+Neu database da dung schema va da co migration, startup se tiep tuc ma khong apply migration moi.
+
+## Swagger
+
+Swagger chi bat trong moi truong `Development`.
+
+Profile `http` trong `src/ShopApp.API/Properties/launchSettings.json` da cau hinh:
+
+- `launchBrowser: true`
+- `launchUrl: swagger`
+- `applicationUrl: http://localhost:5090`
+
+API cung redirect `/` sang `/swagger` trong Development. Vi vay mo:
+
+```text
+http://localhost:5090
+```
+
+se di den Swagger.
+
+## Quy Tac Version Package
+
+Tat ca version NuGet duoc co dinh tap trung trong:
+
+```text
+Directory.Packages.props
+```
+
+Khong khai bao `Version="..."` truc tiep trong cac file `.csproj`. File `.csproj` chi khai bao package can dung, con version nam o `Directory.Packages.props`.
+
+Repo cung bat lock file bang `RestorePackagesWithLockFile=true`, vi vay moi project co `packages.lock.json`. Khi doi version package, chay:
+
+```powershell
+dotnet restore ShopApp.slnx --force-evaluate
+```
+
+va commit cac file `packages.lock.json` thay doi.
+
+Version EF Core phai dong bo voi `Npgsql.EntityFrameworkCore.PostgreSQL`.
+
+Hien tai project giu EF Core o `10.0.0` vi `Npgsql.EntityFrameworkCore.PostgreSQL` dang la `10.0.0`.
+
+Cac file quan trong:
+
+- `global.json`: co dinh SDK .NET 10 dung cho repo.
+- `Directory.Build.props`: bat central package management va lock file.
+- `Directory.Packages.props`: co dinh version package.
+- `packages.lock.json`: khoa dependency graph sau restore.
+
+Neu tron version package, project co the build thanh cong nhung van fail luc runtime voi loi dang:
+
+```text
+Could not load file or assembly 'Microsoft.EntityFrameworkCore.Relational'
+```
+
+## Loi Thuong Gap
+
+### NuGet restore fail
+
+Kiem tra internet, proxy, certificate, hoac firewall. Project can restore package tu NuGet de build on dinh.
+
+### API start duoc nhung request bi loi Windows Event Log
+
+`Program.cs` da cau hinh logging chi ghi ra Console va Debug trong local development, tranh viec ghi Windows Event Log khi user khong co quyen.
+
+### Khong ket noi duoc database
+
+Kiem tra:
+
+- PostgreSQL dang chay.
+- Port `5432` truy cap duoc.
+- Database name, username, password dung voi connection string trong `.env.dev`.
+- DB user co quyen chay migration.
+
+## Test
+
+Chay:
+
+```powershell
+dotnet test ShopApp.slnx --no-restore
+```

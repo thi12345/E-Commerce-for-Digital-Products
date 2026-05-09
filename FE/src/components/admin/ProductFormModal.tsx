@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import type { Product, CreateProductPayload } from "@/lib/types";
+import { selectedVariant } from "@/lib/utils";
 
 interface ProductFormModalProps {
   open: boolean;
@@ -26,6 +27,8 @@ const empty: CreateProductPayload = {
   productLink: "",
   currency: "USD",
   downloadUrl: "",
+  stock: 0,
+  variantName: "Default",
 };
 
 export function ProductFormModal({
@@ -40,18 +43,21 @@ export function ProductFormModal({
 
   useEffect(() => {
     if (product) {
+      const variant = selectedVariant(product);
       setForm({
         name: product.name,
-        description: product.description,
-        price: product.price,
-        actualPrice: product.actualPrice ?? product.price,
-        discountedPrice: product.discountedPrice ?? product.price,
-        discountPercentage: product.discountPercentage ?? 0,
-        aboutProduct: product.aboutProduct ?? product.description,
+        description: product.description ?? product.aboutProduct ?? "",
+        price: variant?.discountedPrice ?? product.price ?? product.actualPrice ?? 0,
+        actualPrice: variant?.actualPrice ?? product.actualPrice ?? product.price ?? 0,
+        discountedPrice: variant?.discountedPrice ?? product.discountedPrice ?? product.price ?? 0,
+        discountPercentage: variant?.discountPercentage ?? product.discountPercentage ?? 0,
+        aboutProduct: product.aboutProduct ?? product.description ?? "",
         imgLink: product.imgLink ?? "",
-        productLink: product.productLink ?? "",
-        currency: product.currency,
-        downloadUrl: product.downloadUrl,
+        productLink: variant?.productLink ?? product.productLink ?? "",
+        currency: variant?.currency ?? product.currency ?? "USD",
+        downloadUrl: variant?.downloadUrl ?? product.downloadUrl ?? "",
+        stock: variant?.stock ?? 0,
+        variantName: variant?.name ?? "Default",
       });
     } else {
       setForm(empty);
@@ -119,6 +125,13 @@ export function ProductFormModal({
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Variant Name</label>
+            <input value={form.variantName ?? ""} onChange={(e) => setStr("variantName", e.target.value)}
+              placeholder="Default"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Discount %</label>
@@ -149,6 +162,13 @@ export function ProductFormModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">Product Link</label>
             <input type="url" value={form.productLink ?? ""} onChange={(e) => setStr("productLink", e.target.value)}
               placeholder="https://store.com/product"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+            <input type="number" min={0} step="1" value={form.stock ?? 0}
+              onChange={(e) => setNum("stock", e.target.value)}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
           </div>
 

@@ -1,11 +1,18 @@
 export type ProductStatus = "Draft" | "Active" | "Inactive";
 export type OrderStatus = "Pending" | "Paid" | "Completed" | "Cancelled";
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string | null;
+  createdAt: string;
+}
+
 export interface Product {
   id: string;
   name: string;
-  description: string;
-  price: number;
+  description?: string;
+  price?: number;
   actualPrice?: number;
   discountedPrice?: number;
   discountPercentage?: number;
@@ -14,10 +21,43 @@ export interface Product {
   productLink?: string;
   rating?: number;
   ratingCount?: number;
-  currency: string;
-  downloadUrl: string;
+  ratingSummary?: RatingSummary;
+  purchaseCount?: number;
+  currency?: string;
+  downloadUrl?: string;
   status: ProductStatus;
   createdAt: string;
+  variants?: ProductVariant[];
+}
+
+export interface RatingSummary {
+  average: number;
+  totalCount: number;
+  oneStarCount: number;
+  twoStarCount: number;
+  threeStarCount: number;
+  fourStarCount: number;
+  fiveStarCount: number;
+}
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  actualPrice: number;
+  discountedPrice: number;
+  discountPercentage: number;
+  currency: string;
+  productLink?: string;
+  downloadUrl?: string;
+  stock: number;
+  isDefault: boolean;
+  options: ProductVariantOption[];
+}
+
+export interface ProductVariantOption {
+  id: string;
+  name: string;
+  value: string;
 }
 
 export interface OrderItem {
@@ -46,8 +86,8 @@ export interface CartItem {
 
 export interface CreateProductPayload {
   name: string;
-  description: string;
-  price: number;
+  description?: string;
+  price?: number;
   actualPrice?: number;
   discountedPrice?: number;
   discountPercentage?: number;
@@ -56,6 +96,22 @@ export interface CreateProductPayload {
   productLink?: string;
   currency: string;
   downloadUrl: string;
+  stock?: number;
+  variantName?: string;
+  variants?: CreateProductVariantPayload[];
+}
+
+export interface CreateProductVariantPayload {
+  name: string;
+  actualPrice: number;
+  discountedPrice: number;
+  discountPercentage: number;
+  currency: string;
+  productLink: string;
+  downloadUrl: string;
+  stock: number;
+  isDefault: boolean;
+  options?: { name: string; value: string }[];
 }
 
 export interface UpdateProductPayload extends CreateProductPayload {

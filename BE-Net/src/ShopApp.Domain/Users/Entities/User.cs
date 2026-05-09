@@ -9,6 +9,7 @@ public sealed class User : AggregateRoot<Guid>
     public string Email { get; private set; } = string.Empty;
     public string FullName { get; private set; } = string.Empty;
     public string PasswordHash { get; private set; } = string.Empty;
+    public string SecurityStamp { get; private set; } = string.Empty;
     public UserRole Role { get; private set; }
     public bool IsActive { get; private set; }
 
@@ -27,6 +28,7 @@ public sealed class User : AggregateRoot<Guid>
             Email = email.Trim().ToLowerInvariant(),
             FullName = fullName.Trim(),
             PasswordHash = passwordHash,
+            SecurityStamp = Guid.NewGuid().ToString("N"),
             Role = UserRole.Customer,
             IsActive = true
         };
@@ -44,6 +46,12 @@ public sealed class User : AggregateRoot<Guid>
     public void ChangePassword(string newPasswordHash)
     {
         PasswordHash = newPasswordHash;
+        RotateSecurityStamp();
+    }
+
+    public void RotateSecurityStamp()
+    {
+        SecurityStamp = Guid.NewGuid().ToString("N");
         SetUpdatedAt();
     }
 

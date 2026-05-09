@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopApp.API.Auth;
 using ShopApp.Application.Catalog.Commands.CreateProduct;
 using ShopApp.Application.Catalog.Commands.DeleteProduct;
 using ShopApp.Application.Catalog.Commands.UpdateProduct;
@@ -37,6 +39,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Create([FromBody] CreateProductCommand command, CancellationToken ct)
     {
         var result = await sender.Send(command, ct);
@@ -44,6 +47,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductRequest request, CancellationToken ct)
     {
         var result = await sender.Send(new UpdateProductCommand(
@@ -59,6 +63,7 @@ public sealed class ProductsController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await sender.Send(new DeleteProductCommand(id), ct);

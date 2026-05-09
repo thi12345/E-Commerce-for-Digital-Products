@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Zap, ZapOff, Search } from "lucide-react";
 import { productsApi } from "@/lib/api";
-import { effectivePrice, formatPrice, hasDiscount, originalPrice } from "@/lib/utils";
+import { effectivePrice, formatPrice, hasDiscount, originalPrice, productCurrency } from "@/lib/utils";
 import { ProductBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -59,7 +59,7 @@ export default function AdminProductsPage() {
   const filtered = (products ?? []).filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.description.toLowerCase().includes(search.toLowerCase()) ||
+      (p.description?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
       (p.aboutProduct?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
       p.status.toLowerCase().includes(search.toLowerCase())
   );
@@ -123,11 +123,11 @@ export default function AdminProductsPage() {
                   </td>
                   <td className="px-5 py-3 hidden sm:table-cell">
                     <span className="font-medium text-indigo-600">
-                      {formatPrice(effectivePrice(p), p.currency)}
+                      {formatPrice(effectivePrice(p), productCurrency(p))}
                     </span>
                     {hasDiscount(p) && (
                       <span className="ml-1.5 text-xs text-gray-400 line-through">
-                        {formatPrice(originalPrice(p), p.currency)}
+                        {formatPrice(originalPrice(p), productCurrency(p))}
                       </span>
                     )}
                   </td>

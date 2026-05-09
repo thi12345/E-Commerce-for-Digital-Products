@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import type { CartItem, Product } from "@/lib/types";
-import { effectivePrice } from "@/lib/utils";
+import { effectivePrice, productCurrency } from "@/lib/utils";
 
 interface CartState {
   items: CartItem[];
@@ -95,7 +95,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (s, i) => s + effectivePrice(i.product) * i.quantity,
     0
   );
-  const currency = state.items[0]?.product.currency ?? "USD";
+  const currency = state.items[0] ? productCurrency(state.items[0].product) : "USD";
 
   return (
     <CartContext.Provider

@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopApp.API.Auth;
 using ShopApp.Application.Payments.Commands.CreatePayment;
 using ShopApp.Application.Payments.Commands.DeletePayment;
 using ShopApp.Application.Payments.Commands.UpdatePaymentStatus;
@@ -14,6 +16,7 @@ namespace ShopApp.API.Controllers;
 public sealed class PaymentsController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> GetAll(
         [FromQuery] Guid? userId,
         [FromQuery] Guid? orderId,
@@ -27,20 +30,29 @@ public sealed class PaymentsController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOrAdmin)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await sender.Send(new GetPaymentByIdQuery(id), ct);
+        if (result is not null && !User.CanAccessUser(result.UserId))
+            return Forbid();
+
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOrAdmin)]
     public async Task<IActionResult> Create([FromBody] CreatePaymentCommand command, CancellationToken ct)
     {
+        if (!User.CanAccessUser(command.UserId))
+            return Forbid();
+
         var result = await sender.Send(command, ct);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [HttpPatch("{id:guid}/status")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdatePaymentStatusRequest request, CancellationToken ct)
     {
         var result = await sender.Send(
@@ -49,6 +61,7 @@ public sealed class PaymentsController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await sender.Send(new DeletePaymentCommand(id), ct);

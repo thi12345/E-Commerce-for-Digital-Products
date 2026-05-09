@@ -1,4 +1,13 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".env" />
+    <File Path=".env.dev" />
+    <File Path=".gitignore" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+    <File Path="Readme.md" />
+  </Folder>
   <Folder Name="/Docker/">
     <File Path="Dockerfile" />
     <File Path="docker-compose.yml" />

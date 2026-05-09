@@ -1,7 +1,7 @@
 <Project>
-  <ItemGroup>
-    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="10.0.6" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="10.0.6" />
-    <PackageReference Update="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.6" />
-  </ItemGroup>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
 </Project>

@@ -1,5 +1,7 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using ShopApp.API.Auth;
 using ShopApp.Application.Users.Commands.CreateUser;
 using ShopApp.Application.Users.Commands.DeleteUser;
 using ShopApp.Application.Users.Commands.UpdateUser;
@@ -14,6 +16,7 @@ namespace ShopApp.API.Controllers;
 public sealed class UsersController(ISender sender) : ControllerBase
 {
     [HttpGet]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? email,
         [FromQuery] UserRole? role,
@@ -27,13 +30,18 @@ public sealed class UsersController(ISender sender) : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.CustomerOrAdmin)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
+        if (!User.CanAccessUser(id))
+            return Forbid();
+
         var result = await sender.Send(new GetUserByIdQuery(id), ct);
         return result is null ? NotFound() : Ok(result);
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Create([FromBody] CreateUserCommand command, CancellationToken ct)
     {
         var result = await sender.Send(command, ct);
@@ -41,6 +49,7 @@ public sealed class UsersController(ISender sender) : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request, CancellationToken ct)
     {
         var result = await sender.Send(
@@ -49,6 +58,7 @@ public sealed class UsersController(ISender sender) : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminOnly)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {
         await sender.Send(new DeleteUserCommand(id), ct);

@@ -1,4 +1,4 @@
-import type { Product, ProductStatus, OrderStatus } from "./types";
+import type { Product, ProductStatus, OrderStatus, ProductVariant } from "./types";
 
 export function formatPrice(amount: number, currency: string = "USD"): string {
   return new Intl.NumberFormat("en-US", {
@@ -7,17 +7,34 @@ export function formatPrice(amount: number, currency: string = "USD"): string {
   }).format(amount);
 }
 
+export function selectedVariant(product: Product): ProductVariant | undefined {
+  return (
+    product.variants?.find((variant) => variant.isDefault) ??
+    product.variants?.slice().sort((a, b) => a.discountedPrice - b.discountedPrice)[0]
+  );
+}
+
 export function originalPrice(product: Product): number {
-  return product.actualPrice ?? product.price;
+  return selectedVariant(product)?.actualPrice ?? product.actualPrice ?? product.price ?? 0;
 }
 
 export function effectivePrice(product: Product): number {
+  const variant = selectedVariant(product);
+  if (variant) {
+    return variant.discountedPrice > 0 ? variant.discountedPrice : variant.actualPrice;
+  }
+
   return product.discountedPrice && product.discountedPrice > 0
     ? product.discountedPrice
-    : product.price;
+    : product.price ?? product.actualPrice ?? 0;
 }
 
 export function discountPercentage(product: Product): number {
+  const variant = selectedVariant(product);
+  if (variant?.discountPercentage && variant.discountPercentage > 0) {
+    return variant.discountPercentage;
+  }
+
   if (product.discountPercentage && product.discountPercentage > 0) {
     return product.discountPercentage;
   }
@@ -31,6 +48,18 @@ export function discountPercentage(product: Product): number {
 
 export function hasDiscount(product: Product): boolean {
   return discountPercentage(product) > 0 && effectivePrice(product) < originalPrice(product);
+}
+
+export function productCurrency(product: Product): string {
+  return selectedVariant(product)?.currency ?? product.currency ?? "USD";
+}
+
+export function productLink(product: Product): string | undefined {
+  return selectedVariant(product)?.productLink ?? product.productLink;
+}
+
+export function productStock(product: Product): number | undefined {
+  return selectedVariant(product)?.stock;
 }
 
 export const statusColors: Record<ProductStatus, string> = {

@@ -10,6 +10,8 @@ import {
   formatPrice,
   hasDiscount,
   originalPrice,
+  productCurrency,
+  productStock,
 } from "@/lib/utils";
 import { ProductBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +21,8 @@ export function ProductCard({ product }: { product: Product }) {
   const { addToCart } = useCart();
   const isActive = product.status === "Active";
   const discounted = hasDiscount(product);
-  const description = product.aboutProduct ?? product.description;
+  const description = product.aboutProduct ?? product.description ?? "";
+  const stock = productStock(product);
 
   return (
     <div className="group flex flex-col rounded-xl bg-white shadow-sm ring-1 ring-gray-100 hover:shadow-md transition-shadow overflow-hidden">
@@ -60,15 +63,20 @@ export function ProductCard({ product }: { product: Product }) {
 
         <p className="text-xs text-gray-500 line-clamp-2">{description}</p>
 
+        <div className="flex items-center justify-between gap-2 text-xs text-gray-400">
+          <span>{product.rating?.toFixed(1) ?? "0.0"} / 5 ({product.ratingCount ?? 0})</span>
+          {typeof stock === "number" && <span>{stock} in stock</span>}
+        </div>
+
         {/* Price */}
         <div className="mt-auto pt-2 flex items-end justify-between gap-2">
           <div className="flex flex-col">
             <span className="text-base font-bold text-indigo-600">
-              {formatPrice(effectivePrice(product), product.currency)}
+              {formatPrice(effectivePrice(product), productCurrency(product))}
             </span>
             {discounted && (
               <span className="text-xs text-gray-400 line-through">
-                {formatPrice(originalPrice(product), product.currency)}
+                {formatPrice(originalPrice(product), productCurrency(product))}
               </span>
             )}
           </div>
